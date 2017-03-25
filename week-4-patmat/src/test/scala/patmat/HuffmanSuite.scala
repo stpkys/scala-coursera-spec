@@ -65,4 +65,29 @@ class HuffmanSuite extends FunSuite {
     }
   }
 
+  val secretWord = "huffmanestcool"
+  test("decode and encode a longer text should be identity") {
+    new TestTrees {
+      assert(decode(frenchCode, encode(frenchCode)(secretWord.toList)) === secretWord.toList)
+    }
+  }
+
+  test("secret text decode should be correct") {
+    assert(decodedSecret.mkString === secretWord)
+  }
+
+  test("secret text encode should be same as secret") {
+    assert(encode(frenchCode)(string2Chars(secretWord)) === secret)
+  }
+
+  test("quick encoding should work on short text") {
+    new TestTrees {
+      assert(decode(t1, quickEncode(t1)("ab".toList)) === "ab".toList)
+    }
+  }
+
+  test("quick encoding should work on secret") {
+    assert(quickEncode(frenchCode)(string2Chars(secretWord)) === secret)
+  }
+
 }
