@@ -1,0 +1,4 @@
+.idea/
+target/
+.DS_Store/
+/week-1-wikipedia/src/main/resources/wikipedia/wikipedia.dat
