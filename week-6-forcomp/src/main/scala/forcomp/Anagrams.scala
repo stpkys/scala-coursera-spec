@@ -165,14 +165,10 @@ object Anagrams {
     }
 
     def extend(occSent: List[Occurrences]): List[Sentence] = {
-      def loop(occLeft: List[Occurrences]): List[Sentence] = {
-        occLeft match {
-          case List() => List(List())
-          case x :: xs => for (i <- dictionaryByOccurrences(x); j <- loop(xs)) yield i :: j
-        }
+      occSent match {
+        case List() => List(List())
+        case x :: xs => for (i <- dictionaryByOccurrences(x); j <- extend(xs)) yield i :: j
       }
-
-      loop(occSent)
     }
 
     val result = loop(occ)
