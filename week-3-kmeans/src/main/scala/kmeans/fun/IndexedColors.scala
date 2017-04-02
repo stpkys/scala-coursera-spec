@@ -2,6 +2,7 @@ package kmeans
 package fun
 
 import scala.collection.GenSeq
+import scala.collection.parallel.ParSeq
 
 abstract sealed trait InitialSelectionStrategy
 case object RandomSampling extends InitialSelectionStrategy
@@ -22,8 +23,8 @@ class IndexedColorFilter(initialImage: Img,
   private var steps = 0
 
   // What could we do here to speed up the computation?
-  val points = imageToPoints(initialImage)
-  val means = initializeIndex(colorCount, points)
+  val points: ParSeq[Point] = imageToPoints(initialImage).par
+  val means: GenSeq[Point] = initializeIndex(colorCount, points).par
 
   /* The work is done here: */
   private val newMeans = kMeans(points, means, 0.01)

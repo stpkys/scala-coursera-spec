@@ -1,15 +1,14 @@
 package kmeans
 
-import java.util.concurrent._
-import scala.collection._
-import org.scalatest.FunSuite
 import org.junit.runner.RunWith
+import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import common._
-import scala.math._
+
+import scala.collection._
 
 object KM extends KMeans
-import KM._
+
+import kmeans.KM._
 
 @RunWith(classOf[JUnitRunner])
 class KMeansSuite extends FunSuite {
@@ -67,10 +66,33 @@ class KMeansSuite extends FunSuite {
   test("'classify with data parallelism should work for empty 'points' and empty 'means'") {
     val points: GenSeq[Point] = IndexedSeq()
     val means: GenSeq[Point] = IndexedSeq()
-    val expected = GenMap[Point,GenSeq[Point]]()
+    val expected = GenMap[Point, GenSeq[Point]]()
     checkParClassify(points, means, expected)
   }
 
+
+  test("'converged' should work for the same oldMeans and newMeans") {
+    val points = IndexedSeq(new Point(1, 1, 1), new Point(2, 2, 2))
+
+    assert(converged(0.01)(points, points) === true)
+  }
+
+  test("'converged' should work for the oldMeans and newMeans") {
+    val points = IndexedSeq(new Point(1, 1, 1), new Point(2, 2, 2.1))
+
+    assert(converged(0.01)(points, points) === true)
+  }
+
+
+  test("'kMeans' should work for 'points' == GenSeq((0, 0, 1), (0,0, -1), (0,1,0), (0,10,0)) and 'oldMeans' == GenSeq((0, -1, 0), (0, 2, 0)) and 'eta' == 12.25") {
+    val points: GenSeq[Point] = IndexedSeq(new Point(0, 0, 1), new Point(0, 0, -1), new Point(0, 1, 0), new Point(0, 10, 0))
+    val oldMeans = IndexedSeq(new Point(0, -1, 0), new Point(0, 2, 0))
+    val eta = 12.25
+
+    val newPoints = kMeans(points, oldMeans, eta)
+
+    assert(newPoints.length === 2)
+  }
 }
 
 
