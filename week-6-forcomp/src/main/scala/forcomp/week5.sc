@@ -39,4 +39,12 @@ lengthFun(List[Int](1, 2, 3, 4))
 
 mapFun(List[Int](1, 4, 6), (a: Int) => a * 2)
 
+val t = for ( i <- List(1, 2, 3); j <- 1 to i) yield (i, j)
+
+val k1 = Map('a' -> 1, 'b' -> 2, 'd' -> 4)
+val k2 = Map('a' -> 1, 'c' -> 2)
+
+List((1, 2), (1, 5), (4,5)).toMap
+
+
 
