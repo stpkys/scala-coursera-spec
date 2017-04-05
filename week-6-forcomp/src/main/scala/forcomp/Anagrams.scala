@@ -1,6 +1,7 @@
 package forcomp
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 
 object Anagrams {
@@ -90,10 +91,12 @@ object Anagrams {
     def loop(acc: List[Occurrences], current: Occurrences): List[Occurrences] = {
       current match {
         case List() => acc
-        case (letter, m) :: xs => loop(for(cur <- acc; i <- 0 to m) yield { if (i == 0) cur else cur :+ (letter, i) }, xs)
+        case (letter, m) :: xs => loop(for (cur <- acc; i <- 0 to m) yield {
+          if (i == 0) cur else (letter, i) :: cur
+        }, xs)
       }
     }
-    loop(List(List()), occurrences)
+    loop(List(List()), occurrences).map { _.sorted }
   }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
@@ -108,7 +111,7 @@ object Anagrams {
    */
   def subtract(x: Occurrences, y: Occurrences): Occurrences = {
     val y1: Map[Char, Int] = y.toMap
-    x.map({ case (c, v) => (c, v - y1.getOrElse(c, 0))}).filter(a => a._2 > 0)
+    x.map { case (c, v) => (c, v - y1.getOrElse(c, 0)) }.filter(_._2 > 0)
   }
 
   /** Returns a list of all anagram sentences of the given sentence.
@@ -154,24 +157,37 @@ object Anagrams {
   def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
     val occ = sentenceOccurrences(sentence)
 
-    def loop(current: Occurrences): List[List[Occurrences]] = {
-      val occSet = combinations(current)
-      if (current.isEmpty) List(List.empty[Occurrences])
-      else occSet.flatMap(c => if (dictionaryByOccurrences.contains(c)) {
-          loop(subtract(current, c)).map(t => c :: t)
-        } else {
-          List()
-        })
+    def loop(occ: Occurrences): List[Sentence] =
+      if (occ.isEmpty) List(List())
+      else for {
+        combination <- combinations(occ)
+        if dictionaryByOccurrences.contains(combination)
+        tail <- loop(subtract(occ, combination))
+        word <- dictionaryByOccurrences(combination)
+      } yield word :: tail
+
+    loop(occ)
+  }
+
+  def sentenceAnagramsMemo(sentence: Sentence): List[Sentence] = {
+    val occ = sentenceOccurrences(sentence)
+    val combinationsCache = collection.mutable.Map[Occurrences, List[Occurrences]]()
+    val tailsCache = collection.mutable.Map[Occurrences, List[Sentence]]()
+
+    def getAndCache[A, B](cache: mutable.Map[A, B], key: A, default: => B): B = {
+      if (!cache.contains(key)) cache.put(key, default)
+      cache(key)
     }
 
-    def extend(occSent: List[Occurrences]): List[Sentence] = {
-      occSent match {
-        case List() => List(List())
-        case x :: xs => for (i <- dictionaryByOccurrences(x); j <- extend(xs)) yield i :: j
-      }
-    }
+    def loop2(occ: Occurrences): List[Sentence] =
+      if (occ.isEmpty) List(List())
+      else for {
+        combination <- getAndCache(combinationsCache, occ, combinations(occ))
+        if dictionaryByOccurrences.contains(combination)
+        tail <- getAndCache(tailsCache, subtract(occ, combination), loop2(subtract(occ, combination)))
+        word <- dictionaryByOccurrences(combination)
+      } yield word :: tail
 
-    val result = loop(occ)
-    result.flatMap(extend)
+    loop2(occ)
   }
 }
