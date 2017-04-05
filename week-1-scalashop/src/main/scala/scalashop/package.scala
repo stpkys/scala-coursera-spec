@@ -45,15 +45,21 @@ package object scalashop {
     var a = 0
     var count = 0
 
-    for(dx <- clamp(x - radius, 0, src.width) until clamp(x + radius + 1, 0, src.width)) {
-      for(dy <- clamp(y - radius, 0, src.height) until clamp(y + radius + 1, 0, src.height)) {
+    def clamp2(min: Int, max: Int)(v: Int) = clamp(v, min, max)
+
+    val boundWidth = clamp2(0, src.width - 1)(_)
+    val boundHeight = clamp2(0, src.height - 1)(_)
+
+    for {
+      dx <- boundWidth(x - radius) to boundWidth(x + radius)
+      dy <- boundHeight(y - radius) to boundHeight(y + radius)
+    } {
         val pix = src(dx, dy)
         r += red(pix)
         g += green(pix)
         b += blue(pix)
         a += alpha(pix)
         count += 1
-      }
     }
 
     rgba(r / count, g / count, b / count, a / count)

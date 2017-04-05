@@ -45,17 +45,11 @@ object VerticalBoxBlur {
    *  Within each column, `blur` traverses the pixels by going from top to
    *  bottom.
    */
-  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
-    var x = from
-    while(x < end) {
-      var y = 0
-      while(y < src.height) {
-        dst(x, y) = boxBlurKernel(src, x, y, radius)
-        y += 1
-      }
-      x += 1
-    }
-  }
+  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit =
+    for {
+      x <- from until end
+      y <- 0 until src.height
+    } dst(x, y) = boxBlurKernel(src, x, y, radius)
 
   /** Blurs the columns of the source image in parallel using `numTasks` tasks.
    *
@@ -65,15 +59,10 @@ object VerticalBoxBlur {
    */
   def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = {
     val batch = src.width / numTasks + (if ((src.width % numTasks) > 0) 1 else 0)
-    val tasks: Array[ForkJoinTask[Unit]] = new Array[ForkJoinTask[Unit]](numTasks)
-    for(i <- 0 until numTasks) {
-      tasks(i) = task {
-        blur(src, dst, i * batch, clamp((i + 1) * batch, 0, src.width), radius)
-      }
-    }
-    for(i <- tasks) {
-      i.join()
-    }
+
+    (for (i <- 0 until src.width by batch) yield task {
+      blur(src, dst, i, clamp(i + batch, 0, src.width), radius)
+    }).foreach(_.join())
   }
 
 }
