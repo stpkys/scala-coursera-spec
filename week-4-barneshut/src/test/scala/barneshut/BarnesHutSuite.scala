@@ -1,14 +1,11 @@
 package barneshut
 
-import java.util.concurrent._
-import scala.collection._
-import org.scalatest.FunSuite
 import org.junit.runner.RunWith
+import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import common._
+
+import scala.collection._
 import scala.math._
-import scala.collection.parallel._
-import barneshut.conctrees.ConcBuffer
 
 @RunWith(classOf[JUnitRunner])
 class BarnesHutSuite extends FunSuite {
@@ -110,6 +107,23 @@ import FloatOps._
     sm += body
     val res = sm(2, 3).size == 1 && sm(2, 3).find(_ == body).isDefined
     assert(res, s"Body not found in the right sector")
+  }
+
+  test("quad insert test") {
+    val quad = Fork(
+      Leaf(0.5f, 0.5f, 1.0f, List(new Body(0.1f, 0.4f, 0.4f, 0.1f, 0.1f))),
+      Empty(1.5f, 0.5f, 1.0f),
+      Empty(0.5f, 1.5f, 1.0f),
+      Empty(1.5f, 1.5f, 1.0f)
+    )
+    val result = quad.insert(new Body(.1f, 1.4f,0.4f, .1f, .1f))
+    result match {
+      case Fork(_, nw, _, _) => nw match {
+        case Leaf(_, _, _, bodies) => assert(bodies.length === 1)
+        case _ => fail("fail")
+    }
+      case _ => fail("fail")
+    }
   }
 
 }
