@@ -51,8 +51,8 @@ package object scalashop {
     val boundHeight = clamp2(0, src.height - 1)(_)
 
     for {
-      dx <- boundWidth(x - radius) to boundWidth(x + radius)
       dy <- boundHeight(y - radius) to boundHeight(y + radius)
+      dx <- boundWidth(x - radius) to boundWidth(x + radius)
     } {
         val pix = src(dx, dy)
         r += red(pix)
@@ -65,4 +65,37 @@ package object scalashop {
     rgba(r / count, g / count, b / count, a / count)
   }
 
+  def boxBlurKernelWhile(src: Img, x: Int, y: Int, radius: Int): RGBA = {
+    if (radius == 0) return src(x, y)
+    var r = 0
+    var g = 0
+    var b = 0
+    var a = 0
+    var count = 0
+
+    val dy = Math.max(0, y - radius)
+    val ly = Math.min(y + radius, src.height - 1)
+
+    val dx = Math.max(0, x - radius)
+    val lx = Math.min(x + radius, src.width - 1)
+
+    var cx = 0
+    var cy = dy
+
+    while (cy <= ly) {
+      cx = dx
+      while (cx <= lx) {
+        val pix = src(cx, cy)
+        r += red(pix)
+        g += green(pix)
+        b += blue(pix)
+        a += alpha(pix)
+        count += 1
+        cx += 1
+      }
+      cy += 1
+    }
+
+    rgba(r / count, g / count, b / count, a / count)
+  }
 }

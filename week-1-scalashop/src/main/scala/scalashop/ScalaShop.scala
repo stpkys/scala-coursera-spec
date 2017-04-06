@@ -32,7 +32,9 @@ object ScalaShop {
 
     val filterCombo = new JComboBox(Array(
       "horizontal-box-blur",
-      "vertical-box-blur"
+      "horizontal-while-box-blur",
+      "vertical-box-blur",
+      "vertical-while-box-blur"
     ))
     controls.add(filterCombo)
 

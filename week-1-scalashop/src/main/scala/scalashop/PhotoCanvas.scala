@@ -64,8 +64,12 @@ class PhotoCanvas extends JComponent {
     filterName match {
       case "horizontal-box-blur" =>
         HorizontalBoxBlur.parBlur(image, dst, numTasks, radius)
+      case "horizontal-while-box-blur" =>
+        HorizontalWhileBoxBlur.parBlur(image, dst, numTasks, radius)
       case "vertical-box-blur" =>
         VerticalBoxBlur.parBlur(image, dst, numTasks, radius)
+      case "vertical-while-box-blur" =>
+        VerticalWhileBoxBlur.parBlur(image, dst, numTasks, radius)
       case "" =>
     }
     image = dst
