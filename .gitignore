@@ -3,3 +3,4 @@ target/
 .DS_Store/
 /week-1-wikipedia/src/main/resources/wikipedia/wikipedia.dat
 /week-2-stackoverflow/src/main/resources/stackoverflow/stackoverflow.csv
+/week-4-timeusage/src/main/resources/timeusage/atussum.csv
