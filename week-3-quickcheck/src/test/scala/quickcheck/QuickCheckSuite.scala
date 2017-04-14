@@ -12,6 +12,11 @@ import org.scalacheck.Prop._
 import org.scalatest.exceptions.TestFailedException
 
 object QuickCheckBinomialHeap extends QuickCheckHeap with BinomialHeap
+object QuickCheckBogus1BinomialHeap extends QuickCheckHeap with Bogus1BinomialHeap
+object QuickCheckBogus2BinomialHeap extends QuickCheckHeap with Bogus2BinomialHeap
+object QuickCheckBogus3BinomialHeap extends QuickCheckHeap with Bogus3BinomialHeap
+object QuickCheckBogus4BinomialHeap extends QuickCheckHeap with Bogus4BinomialHeap
+object QuickCheckBogus5BinomialHeap extends QuickCheckHeap with Bogus5BinomialHeap
 
 @RunWith(classOf[JUnitRunner])
 class QuickCheckSuite extends FunSuite with Checkers {
