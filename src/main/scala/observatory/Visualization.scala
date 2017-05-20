@@ -131,11 +131,12 @@ object Visualization {
     val size = 360 * 180
     val t = new Array[Pixel](size)
     val (locations, temps) = prepareData(temperatures)
+    val sortedColors = colors.toList.sortBy(_._1)
 
     (0 until size).par.foreach(i => {
       val lx = i % 360 - 180
       val ly = 90 - (i / 360)
-      t(i) = interpolateColor(colors, predictTemperature(locations, temps, Location(ly, lx))).toPixel
+      t(i) = interpolateColor(sortedColors, predictTemperature(locations, temps, Location(ly, lx))).toPixel
     })
 
     Image(360, 180, t)
