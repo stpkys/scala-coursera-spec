@@ -51,7 +51,7 @@ class FunSetSuite extends FunSuite {
   import FunSets._
 
   test("contains is implemented") {
-    assert(contains(x => true, 100))
+    assert(contains(_ => true, 100))
   }
 
   /**

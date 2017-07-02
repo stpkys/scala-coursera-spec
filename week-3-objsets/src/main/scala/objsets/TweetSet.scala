@@ -38,7 +38,7 @@ abstract class TweetSet {
     * This method takes a predicate and returns a subset of all the elements
     * in the original set for which the predicate is true.
     *
-    * Question: Can we implment this method here, or should it remain abstract
+    * Question: Can we implement this method here, or should it remain abstract
     * and be implemented in the subclasses?
     */
   def filter(p: Tweet => Boolean): TweetSet = {
@@ -53,7 +53,7 @@ abstract class TweetSet {
   /**
     * Returns a new `TweetSet` that is the union of `TweetSet`s `this` and `that`.
     *
-    * Question: Should we implment this method here, or should it remain abstract
+    * Question: Should we implement this method here, or should it remain abstract
     * and be implemented in the subclasses?
     */
   def union(that: TweetSet): TweetSet = {
@@ -70,6 +70,7 @@ abstract class TweetSet {
     * and be implemented in the subclasses?
     */
   def mostRetweeted: Tweet
+
   def getBiggest(maxTweet: Tweet): Tweet
 
   /**
@@ -82,9 +83,11 @@ abstract class TweetSet {
     * and be implemented in the subclasses?
     */
   def descendingByRetweet: TweetList = {
-      if (isEmpty) return Nil
+    if (isEmpty) Nil
+    else {
       val max = mostRetweeted
       new Cons(max, remove(max).descendingByRetweet)
+    }
   }
 
   /**
@@ -117,6 +120,7 @@ abstract class TweetSet {
 
 class Empty extends TweetSet {
   override def isEmpty = true
+
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
 
   /**
@@ -150,10 +154,12 @@ class Empty extends TweetSet {
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
 
   override def isEmpty = false
+
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     def extendedAcc(): TweetSet = {
       left.filterAcc(p, right.filterAcc(p, acc))
     }
+
     if (p(elem)) extendedAcc().incl(elem)
     else extendedAcc()
   }
@@ -176,6 +182,7 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
       if (t1.retweets > t2.retweets) t1
       else t2
     }
+
     max(elem, max(right.getBiggest(elem), left.getBiggest(elem)))
   }
 
@@ -243,6 +250,7 @@ object GoogleVsApple {
       else if (t.text.contains(l.head)) true
       else loop(l.tail)
     }
+
     loop(l)
   }
 
@@ -258,6 +266,6 @@ object GoogleVsApple {
 
 object Main extends App {
   // Print the trending tweets
-//  GoogleVsApple.googleTweets.descendingByRetweet foreach println
+  //  GoogleVsApple.googleTweets.descendingByRetweet foreach println
   GoogleVsApple.trending foreach println
 }

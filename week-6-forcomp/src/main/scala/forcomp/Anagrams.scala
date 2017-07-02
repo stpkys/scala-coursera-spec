@@ -171,23 +171,26 @@ object Anagrams {
 
   def sentenceAnagramsMemo(sentence: Sentence): List[Sentence] = {
     val occ = sentenceOccurrences(sentence)
-    val combinationsCache = collection.mutable.Map[Occurrences, List[Occurrences]]()
-    val tailsCache = collection.mutable.Map[Occurrences, List[Sentence]]()
-
-    def getAndCache[A, B](cache: mutable.Map[A, B], key: A, default: => B): B = {
-      if (!cache.contains(key)) cache.put(key, default)
-      cache(key)
-    }
+    val cache = collection.mutable.Map[Occurrences, List[Sentence]]()
 
     def loop2(occ: Occurrences): List[Sentence] =
       if (occ.isEmpty) List(List())
       else for {
-        combination <- getAndCache(combinationsCache, occ, combinations(occ))
+        combination <- combinations(occ)
         if dictionaryByOccurrences.contains(combination)
-        tail <- getAndCache(tailsCache, subtract(occ, combination), loop2(subtract(occ, combination)))
+        tail <- proxyLoop(subtract(occ, combination))
         word <- dictionaryByOccurrences(combination)
       } yield word :: tail
 
-    loop2(occ)
+    def proxyLoop(occ: Occurrences): List[Sentence] = {
+      if (cache.contains(occ)) cache(occ)
+      else {
+        val t = loop2(occ)
+        cache(occ) = t
+        t
+      }
+    }
+
+    proxyLoop(occ)
   }
 }

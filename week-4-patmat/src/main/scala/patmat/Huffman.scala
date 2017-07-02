@@ -16,7 +16,7 @@ object Huffman {
     * present in the leaves below it. The weight of a `Fork` node is the sum of the weights of these
     * leaves.
     */
-  abstract class CodeTree
+  abstract sealed class CodeTree
 
   case class Fork(left: CodeTree, right: CodeTree, chars: List[Char], weight: Int) extends CodeTree
 
@@ -138,9 +138,10 @@ object Huffman {
   def combine(trees: List[CodeTree]): List[CodeTree] = {
     def insert(trees: List[CodeTree], element: Fork): List[CodeTree] = trees match {
       case Nil => element :: Nil
-      case Leaf(char, weight) :: xs => if (weight < element.weight) Leaf(char, weight) :: insert(xs, element) else element :: trees
-      case Fork(left, right, chars, weight) :: xs => if (weight < element.weight) Fork(left, right, chars, weight) :: insert(xs, element) else element :: trees
-      case _ => Nil
+      case Leaf(char, weight) :: xs =>
+        if (weight < element.weight) Leaf(char, weight) :: insert(xs, element) else element :: trees
+      case Fork(left, right, chars, weight) :: xs =>
+        if (weight < element.weight) Fork(left, right, chars, weight) :: insert(xs, element) else element :: trees
     }
 
     trees match {
