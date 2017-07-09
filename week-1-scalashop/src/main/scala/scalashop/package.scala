@@ -1,4 +1,4 @@
-
+import scala.annotation.tailrec
 
 package object scalashop {
 
@@ -97,5 +97,28 @@ package object scalashop {
     }
 
     rgba(r / count, g / count, b / count, a / count)
+  }
+
+  def boxBlurKernelRecursion(src: Img, x: Int, y: Int, radius: Int): RGBA = {
+    val startX = clamp(x - radius, 0, src.width)
+    val startY = clamp(y - radius, 0, src.height)
+    val dx = Math.min(x + radius, src.width - 1) - startX
+    val dy = Math.min(y + radius, src.height - 1) - startY
+    val d = (dx + 1) * (dy + 1)
+
+    @tailrec
+    def loop(r: Int, g: Int, b: Int, a: Int, x: Int, y: Int): RGBA = {
+      if (y > dy) rgba(r / d, g / d, b / d, a / d)
+      else {
+        val pix = src(startX + x, startY + y) //startX + count % dx, startY + count / dx)
+        loop(
+          r + red(pix), g + green(pix), b + blue(pix), a + alpha(pix),
+          if (x < dx) x + 1 else 0,
+          if (x < dx) y else y + 1
+        )
+      }
+    }
+
+    loop(0, 0, 0, 0, 0, 0)
   }
 }

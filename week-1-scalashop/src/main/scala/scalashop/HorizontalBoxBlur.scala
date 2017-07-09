@@ -3,6 +3,8 @@ package scalashop
 import common._
 import org.scalameter._
 
+import scalashop.HorizontalBoxBlur.blur
+
 object HorizontalBoxBlurRunner {
 
   val standardConfig = config(
@@ -16,6 +18,8 @@ object HorizontalBoxBlurRunner {
     val radius = 3
     val width = 1920
     val height = 1080
+    val numTasks = 8
+
     val src = new Img(width, height)
     val dst = new Img(width, height)
     val seqtime = standardConfig measure {
@@ -26,7 +30,12 @@ object HorizontalBoxBlurRunner {
       HorizontalWhileBoxBlur.blur(src, dst, 0, height, radius)
     }
 
-    val numTasks = 32
+    val boxBlur = new HorizontalWhileBoxBlur(new RecursionBlurKernel)
+
+    val seqTimeWhileAndRec = standardConfig measure {
+      boxBlur.blur(src, dst, 0, height, radius)
+    }
+
     val partime = standardConfig measure {
       HorizontalBoxBlur.parBlur(src, dst, numTasks, radius)
     }
@@ -37,6 +46,7 @@ object HorizontalBoxBlurRunner {
 
     println(s"sequential blur time: $seqtime ms")
     println(s"sequential blur time with while: $seqtimeWhile ms")
+    println(s"sequential blur time with while and rec: $seqTimeWhileAndRec ms")
     println(s"Speed Up between for and while: ${seqtime / seqtimeWhile}")
 
     println(s"fork/join blur time: $partime ms")
@@ -47,28 +57,7 @@ object HorizontalBoxBlurRunner {
   }
 }
 
-
-/** A simple, trivially parallelizable computation. */
-object HorizontalBoxBlur extends BoxBlur {
-
-  /** Blurs the rows of the source image `src` into the destination image `dst`,
-    * starting with `from` and ending with `end` (non-inclusive).
-    *
-    * Within each row, `blur` traverses the pixels by going from left to right.
-    */
-  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
-    for {
-      y <- from until end
-      x <- 0 until src.width
-    } dst(x, y) = boxBlurKernel(src, x, y, radius)
-  }
-
-  /** Blurs the rows of the source image in parallel using `numTasks` tasks.
-    *
-    * Parallelization is done by stripping the source image `src` into
-    * `numTasks` separate strips, where each strip is composed of some number of
-    * rows.
-    */
+trait HorParBlur extends BoxBlur {
   def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = {
     val batch = src.height / numTasks + (if (src.height % numTasks > 0) 1 else 0)
 
@@ -77,30 +66,52 @@ object HorizontalBoxBlur extends BoxBlur {
     }
     tasks.foreach(_.join())
   }
-
 }
 
-object HorizontalWhileBoxBlur extends BoxBlur {
+class HorizontalBoxBlur(blurKernel: BlurKernel) extends BoxBlur with HorParBlur {
+  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
+    for {
+      y <- from until end
+      x <- 0 until src.width
+    } dst(x, y) = blurKernel.blur(src, x, y, radius)
+  }
+}
 
-  override def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
+/** A simple, trivially parallelizable computation. */
+object HorizontalBoxBlur extends BoxBlur {
+
+  val boxBlur = new HorizontalBoxBlur(new ForBlurKernel)
+
+  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
+    boxBlur.blur(src, dst, from, end, radius)
+  }
+
+  def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = {
+    boxBlur.parBlur(src, dst, numTasks, radius)
+  }
+}
+
+class HorizontalWhileBoxBlur(blurKernel: BlurKernel) extends BoxBlur with HorParBlur {
+
+  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
     var x = 0
     var y = from
     while (y < end) {
       x = 0
       while (x < src.width) {
-        dst(x, y) = boxBlurKernelWhile(src, x, y, radius)
+        dst(x, y) = blurKernel.blur(src, x, y, radius)
         x += 1
       }
       y += 1
     }
   }
+}
 
-  override def parBlur(src: Img, dst: Img, numTasks: RGBA, radius: RGBA): Unit = {
-    val batch = src.height / numTasks + (if (src.height % numTasks > 0) 1 else 0)
+object HorizontalWhileBoxBlur extends BoxBlur {
+  val boxBlur = new HorizontalWhileBoxBlur(new WhileBlurKernel)
 
-    val tasks = for {i <- 0 until src.height by batch} yield task {
-      blur(src, dst, i, clamp(i + batch, 0, src.height), radius)
-    }
-    tasks.foreach(_.join())
+  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
+    boxBlur.blur(src, dst, from, end, radius)
   }
+  def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = boxBlur.parBlur(src, dst, numTasks, radius)
 }
