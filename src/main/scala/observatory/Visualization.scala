@@ -12,16 +12,7 @@ object Visualization {
 
   val R = 6371.0
 
-  val scale: List[(Double, Color)] = List[(Double, Color)](
-    (60.0, Color(255, 255, 255)),
-    (32.0, Color(255, 0, 0)),
-    (12.0, Color(255, 255, 0)),
-    (0, Color(0, 255, 255)),
-    (-15.0, Color(0, 0, 255)),
-    (-27.0, Color(255, 0, 255)),
-    (-50.0, Color(33, 0, 107)),
-    (-60.0, Color(0, 0, 0))
-  ).sortBy(_._1)
+  val scale: List[(Double, Color)] = ColorScales.scale1.sortBy(_._1)
 
   def distance(l1: Location, l2: Location): Double = {
     distance(locationToLocationRad(l1), locationToLocationRad(l2))

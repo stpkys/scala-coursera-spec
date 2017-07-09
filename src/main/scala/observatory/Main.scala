@@ -63,7 +63,7 @@ object Main extends App {
 //    tile(d, Visualization.scale, 0, 0, 0)
 //  }
 //  saveTmpImage(image, "target/tile.png")
-//
+
 //
 //  Interaction.generateTiles[Array[(Location, Double)]](List((2015, d)), Interaction.storeImage)
 
