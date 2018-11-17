@@ -4,6 +4,8 @@ import java.io.File
 import java.time.LocalDate
 
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
 
 
 /**
@@ -100,5 +102,53 @@ object Extraction {
         val r = p.foldLeft((0.0, 0))((acc, current) => current match {case ((temp, count), _) => (acc._1 + temp, acc._2 + count)})
         r._1 / r._2
       })
+  }
+
+  case class StationRecord(id: Int, id2: Int, lat: Double, lon: Double)
+  case class TemperatureRec(id: Int, id2: Int, month: Int, day: Int, t: Double)
+
+  def main(args: Array[String]): Unit = {
+    val spark = SparkSession.builder()
+      .appName("Extraction test")
+      .master("local")
+      .getOrCreate()
+
+    import spark.implicits._
+    val stations = spark.read
+        .schema(StructType(List(
+          StructField("id", IntegerType),
+          StructField("id2", IntegerType),
+          StructField("lat", DoubleType),
+          StructField("lon", DoubleType)
+        )))
+      .csv(getResource("/stations.csv"))
+      .as[StationRecord]
+
+    stations.printSchema()
+    stations.createOrReplaceTempView("stations")
+
+    spark
+      .read
+        .schema(StructType(List(
+          StructField("id", IntegerType),
+          StructField("id2", IntegerType),
+          StructField("month", IntegerType),
+          StructField("day", IntegerType),
+          StructField("t", DoubleType)
+        )))
+      .csv(getResource("/2015.csv"))
+      .as[TemperatureRec]
+      .createOrReplaceTempView("temp")
+
+
+//    val result = spark.sql("SELECT * FROM temp JOIN stations ON temp.id = stations.id AND temp.id2 = stations.id2")
+    val result = spark.sql("SELECT id, id2, avg(t) FROM temp " +
+      " GROUP BY id, id2")
+
+    result.show(10)
+
+    val k = Main.measure("converting") {
+      stations.rdd
+    }
   }
 }
