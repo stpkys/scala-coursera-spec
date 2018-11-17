@@ -1,3 +1,6 @@
-target/
 .idea/
-.DS_Store
+target/
+.DS_Store/
+/scala-spark-course/week-1-wikipedia/src/main/resources/wikipedia/wikipedia.dat
+/scala-spark-course/week-2-stackoverflow/src/main/resources/stackoverflow/stackoverflow.csv
+/scala-spark-course/week-4-timeusage/src/main/resources/timeusage/atussum.csv
